@@ -1,0 +1,39 @@
+# Node.js dependencies
+node_modules/
+
+# Environment variable files
+.env
+
+# Logs
+*.log
+
+# Directory for instrumented files
+coverage/
+
+# Dependency directories
+jspm_packages/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Build output
+dist/
+build/
+
+# Mac system files
+.DS_Store
+
+# Windows system files
+Thumbs.db
+
+# VSCode settings
+.vscode/
+
+# IDE files
+*.suo
+*.ntvs_analysis.dat
+*.njsproj
+*.sln
+
+# Other files
+*.lock
