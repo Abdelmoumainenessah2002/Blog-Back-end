@@ -9,6 +9,8 @@ This is a simple RESTful API for a blog application, built with Node.js, Express
 - [Installation](#installation)
 - [Usage](#usage)
 - [API Endpoints](#api-endpoints)
+- [Middlewares](#middlewares)
+- [Error Handling](#error-handling)
 - [Upcoming Features](#upcoming-features)
 - [License](#license)
 
@@ -55,9 +57,16 @@ This is a simple RESTful API for a blog application, built with Node.js, Express
 
 ## Usage
 
-- Use a tool like [Postman](https://www.postman.com/) to interact with the API.
-- Register a new user, log in, and obtain a token for authentication.
-- Include the token in the `Authorization` header for routes that require authentication.
+- Use a tool like [Postman](https://www.postman.com/) or [cURL](https://curl.se/) to interact with the API.
+- **Authenticate with the API:**
+  - **Register a new user:**
+    - Send a POST request to `/api/auth/register` with the required fields (`username`, `email`, `password`) to create a new user account.
+  - **Log in an existing user:**
+    - Send a POST request to `/api/auth/login` with `email` and `password` to receive a JWT token.
+- **Include the token in requests:**
+  - Use the received token in the `Authorization` header of requests to access protected routes. The token should be prefixed with `Bearer `.
+  - Example header: `Authorization: Bearer your_jwt_token_here`
+
 
 ## API Endpoints
 
@@ -80,6 +89,86 @@ This is a simple RESTful API for a blog application, built with Node.js, Express
       "password": "your_password"
     }
     ```
+### Users
+- **GET** `/api/users` - Get all users
+  - **Description:** Retrieves a list of all users.
+  - **Access:** Private (requires authentication)
+
+- **GET** `/api/users/:id` - Get user profile
+  - **Description:** Retrieves the profile of a specific user by their ID.
+  - **Access:** Private (requires authentication)
+
+- **PUT** `/api/users/:id` - Update user profile
+  - **Description:** Updates the profile information of a specific user by their ID.
+  - **Request Body:**
+    ```json
+    {
+      "username": "new_username",
+      "password": "new_password", // Optional
+      "Bio": "new_bio"
+    }
+    ```
+  - **Access:** Private (requires authentication)
+
+- **GET** `/api/users/count` - Get the total number of users
+  - **Description:** Retrieves the total count of users in the system.
+  - **Access:** Private (requires authentication)
+
+## Middlewares
+
+- **Authentication Middleware:** Ensures routes are protected by verifying JWT tokens.
+- **Error Handling Middleware:** Catches and processes errors from various parts of the application.
+
+Add details about each middleware, including their functionality and how they integrate with the rest of the application.
+
+## Error Handling
+
+- **400 Bad Request:** This error occurs when the request is invalid or has missing or incorrect data. For example, if required fields are missing or data validation fails.
+
+  ```json
+  {
+    "message": "Invalid request data"
+  }
+  ```
+
+- **401 Unauthorized:** This error occurs when authentication is required but the request does not include valid credentials. For example, if a token is missing or invalid.
+
+  ```json
+  {
+  "message": "Authentication failed"
+  }
+  ```
+
+- **403 Forbidden:** This error occurs when the user is authenticated but does not have permission to access the requested resource. For example, if a non-admin user tries to access admin-only endpoints.
+
+  ```json
+  {
+  "message": "Access denied"
+  }
+  ```
+
+- **404 Not Found:** This error occurs when the requested resource could not be found. For example, if a user tries to access a non-existent endpoint or user.
+
+  ```json
+  {
+  "message": "Resource not found"
+  }
+  ```
+
+- **500 Internal Server Error:** This error occurs when there is an unexpected server-side issue. For example, if there is an error in the server code or an unhandled exception occurs
+
+  ```json
+  {
+  "message": "Internal server error"
+  }
+  ```
+
+This format provides clear and concise information about the possible errors and their responses, suitable for inclusion in your `README.md` file.
+
+
+
+
+
 
 ## Upcoming Features
 
