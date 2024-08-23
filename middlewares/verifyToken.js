@@ -15,10 +15,8 @@ function verifyToken(req, res, next) {
     }
     else {
         res.status(401).json({ message: "No token provided, access denied" });
-    }
-     
+    }  
 }
-
 
 // verify token & admin
 function verifyTokenAndAdmin(req, res, next) {
@@ -37,7 +35,7 @@ function verifyTokenAnd1OnlyUser(req, res, next) {
         if (req.user._id !== req.params.id) {
             return res.status(403).json({ message: "You are not authorized to access this route, only user himself" });
         }
-        next();
+        next();  
     }
     );
 }
