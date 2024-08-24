@@ -10,6 +10,7 @@ This is a simple RESTful API for a blog application, built with Node.js, Express
 - [Usage](#usage)
 - [API Endpoints](#api-endpoints)
 - [Middlewares](#middlewares)
+- [Utilities](#utilities)
 - [Error Handling](#error-handling)
 - [Upcoming Features](#upcoming-features)
 - [License](#license)
@@ -25,7 +26,7 @@ This is a simple RESTful API for a blog application, built with Node.js, Express
 ## Technologies Used
 
 - **Backend:** Node.js, Express.js
-- **Database:** MongoDB, Mongoose
+- **Database:** MongoDB, Mongoose, Cloudinary
 - **Authentication:** JWT, bcryptjs
 - **Validation:** Joi
 - **Development Tools:** Nodemon
@@ -41,13 +42,16 @@ This is a simple RESTful API for a blog application, built with Node.js, Express
    npm install
    ```
 3. **Set up environment variables:**
-   Create a .env file in the root directory and add the following variables:
+   Create a `.env` file in the root directory and add the following variables:
    ```bash
-   PORT = 8000
+   PORT=8000
    MONGO_URI = your_mongo_db_connection_string
    JWT_SECRET = your_jwt_secret
-   NODE_ENV = developement
-   ```
+   NODE_ENV = development
+   CLOUDINARY_CLOUD_NAME = your_cloudinary_cloud_name
+   CLOUDINARY_API_KEY = your_cloudinary_api_key
+   CLOUDINARY_API_SECRET = your_cloudinary_api_secret
+
 4. **Start the development server:**
 
     ```bash
@@ -114,12 +118,75 @@ This is a simple RESTful API for a blog application, built with Node.js, Express
   - **Description:** Retrieves the total count of users in the system.
   - **Access:** Private (requires authentication)
 
+- **POST** `/api/users/profile/profile-photo-upload` - Upload profile picture
+  - **Description:** Allows the user to upload a profile picture. The image is uploaded to Cloudinary, and the user's profile is updated with the new image.
+  - **Request:** Multipart form-data with the file field named `file`.
+  - **Access:** Private (only the user themselves)
+
+- **DELETE** `/api/users/profile/:id` - Delete user profile
+  - **Description:** Deletes a user profile, including the user's profile photo from Cloudinary and other associated data.
+  - **Access:** Private (only admin or the user themselves)
+
+### Posts
+
+- **POST** `/api/posts` - Create new post
+  - **Description:** Creates a new post with an image uploaded to Cloudinary. The post is saved in the database.
+  - **Request Body:**
+    ```json
+    {
+      "title": "Post title",
+      "description": "Post description",
+      "category": "Post category"
+    }
+    ```
+  - **Request:** Multipart form-data with the file field named `file`.
+  - **Access:** Private (only logged-in users)
+
+- **GET** `/api/posts` - Get all posts
+  - **Description:** Retrieves a list of all posts. Supports pagination and filtering by category.
+  - **Query Parameters:**
+    - `pageNumber`: Page number for pagination.
+    - `category`: Filter posts by category.
+  - **Access:** Public
+
+- **GET** `/api/posts/:id` - Get single post
+  - **Description:** Retrieves a specific post by its ID.
+  - **Access:** Public
+
+- **GET** `/api/posts/count` - Get posts count
+  - **Description:** Retrieves the total count of posts in the system.
+  - **Access:** Private (only admin)
+
 ## Middlewares
 
 - **Authentication Middleware:** Ensures routes are protected by verifying JWT tokens.
+
 - **Error Handling Middleware:** Catches and processes errors from various parts of the application.
 
-Add details about each middleware, including their functionality and how they integrate with the rest of the application.
+- **Object ID Validation Middleware:** Validates MongoDB Object IDs in request parameters.
+  - **Functionality:** This middleware checks if the provided ID is a valid MongoDB Object ID. If the ID is invalid, it returns a `400 Bad Request` response with a message indicating that the Object ID is invalid.
+  - **Usage:**
+    ```javascript
+    const validateObjectId = require('./path/to/middleware');
+    app.use('/api/some-route/:id', validateObjectId, someController);
+    ```
+
+- **Photo Upload Middleware:** Handles image uploads using `multer`.
+  - **Functionality:** This middleware manages image uploads, storing them in a specified directory on the server. It also enforces file size limits (e.g., 5MB) and ensures that only image files are accepted.
+  - **Usage:**
+    ```javascript
+    const photoUpload = require('./path/to/middleware');
+    app.post('/api/users/profile/profile-photo-upload', photoUpload.single('file'), profilePhotoUploadCtrl);
+    ```
+
+## Utilities
+
+- **Cloudinary Utility:** This utility, located in the `utils/Cloudinary.js` file, handles image uploads and deletions using Cloudinary.
+  - **Functions:**
+    - `cloudinaryUploadImage(file)`: Uploads an image to Cloudinary and returns the uploaded image data.
+    - `cloudinaryRemoveImage(imagePublicId)`: Deletes an image from Cloudinary using its public ID.
+  - **Usage:** These functions are used in controllers that require image upload or deletion functionality.
+  
 
 ## Error Handling
 
