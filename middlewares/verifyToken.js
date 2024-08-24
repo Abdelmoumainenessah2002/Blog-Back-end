@@ -30,9 +30,9 @@ function verifyTokenAndAdmin(req, res, next) {
 }
 
 // verify token & users himself
-function verifyTokenAnd1OnlyUser(req, res, next) {
+function verifyTokenAndOnlyUser(req, res, next) {
     verifyToken(req, res, () => {
-        if (req.user._id !== req.params.id) {
+        if (req.user.id !== req.params.id) {
             return res.status(403).json({ message: "You are not authorized to access this route, only user himself" });
         }
         next();
@@ -40,4 +40,23 @@ function verifyTokenAnd1OnlyUser(req, res, next) {
     );
 }
 
-module.exports = { verifyToken, verifyTokenAndAdmin, verifyTokenAnd1OnlyUser };
+
+// verify token & only admins or users himself
+function verifyTokenAndAuthorization(req, res, next) {
+    verifyToken(req, res, () => {
+        if (req.user.id === req.params.id || req.user.isAdmin) {
+            next();
+        }
+        else {
+            return res.status(403).json({message:"You are not authorized to access this route, only user himself or admin",});
+        }
+    }
+    );
+}
+
+module.exports = {
+  verifyToken,
+  verifyTokenAndAdmin,
+  verifyTokenAndOnlyUser,
+  verifyTokenAndAuthorization,
+};
