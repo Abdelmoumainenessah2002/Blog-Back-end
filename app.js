@@ -16,6 +16,7 @@ app.use(express.json()); // this function let the express know the json file whi
 // routes
 app.use("/api/auth", require("./routes/authRoute"));
 app.use("/api/users", require("./routes/usersRoute"));
+app.use("/api/posts", require("./routes/postsRoute"));
 
 // Running The server
 const PORT = process.env.PORT || 8000;
