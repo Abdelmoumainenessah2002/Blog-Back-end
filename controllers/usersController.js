@@ -8,6 +8,8 @@ const {
   cloudinaryUploadImage,
   cloudinaryRemoveImage,
 } = require("../utils/Cloudinary");
+
+
 /**
  * @desc    Get all users profile
  * @route   /api/users/profile
@@ -24,7 +26,7 @@ module.exports.getAllUsersCtrl = asyncHandler(async (req, res) => {
  * @desc    Get user Profile
  * @route   /api/users/profile/:id
  * @method  GET
- * @access  private (only admin)
+ * @access  public (anyone can access)
  */
 
 module.exports.getUserProfileCtrl = asyncHandler(async (req, res) => {
@@ -91,6 +93,10 @@ module.exports.getUsersCountCtrl = asyncHandler(async (req, res) => {
   res.status(200).json(count);
 });
 
+
+
+
+
 /**
  * @desc    Profile Picture Upload
  * @route   /api/users/profile/profile-photo-upload
@@ -105,18 +111,18 @@ module.exports.profilePhotoUploadCtrl = asyncHandler(async (req, res) => {
   }
 
   // 2- Get the path to the image
-
   const imagePath = path.join(__dirname, `../images/${req.file.filename}`);
 
   // 3- Upload the image to Cloudinary
   const result = await cloudinaryUploadImage(imagePath);
   console.log(result);
+
   // 4- Get the user from the database
   const user = await User.findById(req.user.id);
-  console.log(user);
+
   // 5- Delete the old photo from Cloudinary if exists
   if (user.profilePhoto.publicId !== null) {
-    await cloudinaryRemoveImage(user.profilePhoto);
+    await cloudinaryRemoveImage(user.profilePhoto.publicId);
   }
   // 6-Update the user's profile photo in the database
   user.profilePhoto = {
@@ -135,4 +141,38 @@ module.exports.profilePhotoUploadCtrl = asyncHandler(async (req, res) => {
   // 8- Remove the photo from the server
   fs.unlinkSync(imagePath);
 
+});
+
+
+
+
+/**
+ * @desc    Delete Profile (Account)
+ * @route   /api/users/profile/:id
+ * @method  DELETE
+ * @access  private (only admin or user himself)
+ */
+
+module.exports.deleteUserProfileCtrl = asyncHandler(async (req, res) => {
+  // check if user exists
+  const user = await User.findById(req.params.id);
+
+  if (!user) {
+    res.status(404).json({ message: "User not found" });
+  }
+
+  // @TODO => 2- Get All posts of the user from the database
+  // @TODO => 3- Get the public ids of the images of the posts
+  // @TODO => 4- Delete all posts images from Cloudinary that belong to the user
+
+  // 5- Delete the user profile photo from Cloudinary
+  await cloudinaryRemoveImage(user.profilePhoto.publicId);
+
+  // @TODO => 6- Delete the user posts & comments from the database
+
+  // 7- Delete the user from the database
+  await User.findByIdAndDelete(req.params.id);
+
+  // 8- Send a response to the client
+  res.status(200).json({ message: "User deleted successfully" });
 });
