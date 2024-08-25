@@ -184,6 +184,41 @@ This is a simple RESTful API for a blog application, built with Node.js, Express
   - **Description:** Toggles the like status of a specific post by its ID. Only logged-in users can like or unlike the post.
   - **Access:** Private (only logged-in users)
 
+### Comments
+
+- **POST** /api/comments - Add a new comment
+  - **Description:** Adds a new comment to a specific post.
+  - **Request Body:**
+    
+    ```json
+    {
+      "postId": "ID of the post",
+      "text": "Comment text"
+    }
+    ```
+
+  - **Access:** Private (only logged-in users)
+
+- **GET** /api/comments - Get all comments
+  - **Description:** Retrieves a list of all comments in the system.
+  - **Access:** Private (only admin)
+
+- **DELETE** /api/comments/:id - Delete comment
+  - **Description:** Deletes a specific comment by its ID. Only the admin or the user who created the comment can delete it.
+  - **Access:** Private (only admin or the user who created the comment)
+
+- **PUT** /api/comments/:id - Update comment
+  - **Description:** Updates a specific comment by its ID. Only the user who created the comment can update it.
+  - **Request Body:**
+    
+    ```json
+    {
+      "text": "Updated comment text"
+    }
+    ```
+
+  - **Access:** Private (only logged-in users and who create the post)
+
 
 ## Middlewares
 
