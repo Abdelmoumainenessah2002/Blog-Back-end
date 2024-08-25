@@ -4,7 +4,7 @@ const { Post, validateCreatePost, validateUpdatePost } = require("../models/Post
 const asyncHandler = require('express-async-handler');
 const {User} = require('../models/User');
 const { cloudinaryUploadImage, cloudinaryRemoveImage } = require('../utils/Cloudinary');
-
+const {Comment} = require('../models/Comment');
 
  /**
  * @desc    Create new post
@@ -92,7 +92,9 @@ module.exports.getAllPostsCtrl = asyncHandler(async (req, res) => {
 */
     
 module.exports.getSinglePostCtrl = asyncHandler(async (req, res) => {
-    const post = await Post.findById(req.params.id).populate('user', '-password');
+    const post = await Post.findById(req.params.id)
+      .populate("user", "-password")
+      .populate("comments");
     
     if (!post) {
         return res.status(404).json({ message: "Post not found" });
@@ -134,7 +136,8 @@ module.exports.deletePostCtrl = asyncHandler(async (req, res) => {
     await Post.findByIdAndDelete(req.params.id);
     await cloudinaryRemoveImage(post.image.publicId);
 
-    // @TODO: remove the image from the server
+    // @TODO: remove all the comments related to this post
+    await Comment.deleteMany({ postId: post._id });
 
     return res.status(200).json({ message: "Post deleted successfully",postId: post._id });
   }
