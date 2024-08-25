@@ -157,6 +157,34 @@ This is a simple RESTful API for a blog application, built with Node.js, Express
   - **Description:** Retrieves the total count of posts in the system.
   - **Access:** Private (only admin)
 
+- **DELETE** /api/posts/:id - Delete post
+  - **Description:** Deletes a specific post by its ID. Only the admin or the user who created the post can delete it.
+  - **Access:** Private (only admin or the user who created the post)
+
+- **PUT** /api/posts/:id - Update post
+  - **Description:** Updates a specific post by its ID. Only the user who created the post can update it.
+  - **Request Body:**
+    
+    ```json
+    {
+      "title": "Updated title",
+      "description": "Updated description",
+      "category": "Updated category"
+    }
+    ```
+
+  - **Access:** Private (only the user who created the post)
+
+- **PUT** /api/posts/upload-image/:id - Update post image
+  - **Description:** Updates the image of a specific post by its ID. Only the user who created the post can update the image.
+  - **Request:** Multipart form-data with the file field named `file`.
+  - **Access:** Private (only the user who created the post)
+
+- **PUT** /api/posts/liked/:id - Toggle Like
+  - **Description:** Toggles the like status of a specific post by its ID. Only logged-in users can like or unlike the post.
+  - **Access:** Private (only logged-in users)
+
+
 ## Middlewares
 
 - **Authentication Middleware:** Ensures routes are protected by verifying JWT tokens.
