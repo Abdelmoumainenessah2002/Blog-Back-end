@@ -21,7 +21,7 @@ module.exports.createCommentCtrl = asyncHandler(async (req, res) => {
     // 2- create the comment and save it to the database
     const comment = await Comment.create({
         postId: req.body.postId,
-        userId: req.user.id,
+        user: req.user.id,
         text: req.body.text,
         username: profile.username,
     });
