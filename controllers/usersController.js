@@ -7,8 +7,10 @@ const path = require("path");
 const {
   cloudinaryUploadImage,
   cloudinaryRemoveImage,
+  cloudinaryRemoveMultipleImage,
 } = require("../utils/Cloudinary");
-
+const {Post} = require( '../models/Post');
+const {Comment} = require('../models/Comment');
 
 /**
  * @desc    Get all users profile
@@ -161,15 +163,23 @@ module.exports.deleteUserProfileCtrl = asyncHandler(async (req, res) => {
     res.status(404).json({ message: "User not found" });
   }
 
-  // @TODO => 2- Get All posts of the user from the database
-  // @TODO => 3- Get the public ids of the images of the posts
-  // @TODO => 4- Delete all posts images from Cloudinary that belong to the user
+  // 2- Get All posts of the user from the database
+  const posts = await Post.find({ user: user._id });
+  // 3- Get the public ids of the images of the posts
+  const publicIds = posts?.map((post) => post.image.publicId);
+  console.log(publicIds);
+  // 4- Delete all posts images from Cloudinary that belong to the user
+  if (publicIds?.length > 0) {
+    await cloudinaryRemoveMultipleImage(publicIds);
+  }
+
 
   // 5- Delete the user profile photo from Cloudinary
   await cloudinaryRemoveImage(user.profilePhoto.publicId);
 
-  // @TODO => 6- Delete the user posts & comments from the database
-
+  // 6- Delete the user posts & comments from the database
+  await Post.deleteMany({ user: user._id });
+  await Comment.deleteMany({ user: user._id });
   // 7- Delete the user from the database
   await User.findByIdAndDelete(req.params.id);
 
