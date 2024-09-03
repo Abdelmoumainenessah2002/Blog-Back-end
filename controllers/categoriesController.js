@@ -51,6 +51,7 @@ module.exports.deleteCategoryCtrl = asyncHandler(async (req, res) => {
         return res.status(404).json({ error: "Category not found" });
     }
     await Category.findByIdAndDelete(req.params.id);
-    res.json({ message: "Category Deleted Successfully" });
+
+    res.json({ message: "Category Deleted Successfully", categoryId: category._id });
 }
 );
