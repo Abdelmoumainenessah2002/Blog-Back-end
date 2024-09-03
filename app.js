@@ -37,7 +37,7 @@ app.use(express.json()); // this function let the express know the json file whi
 
 // cors policy
 app.use(cors({
-  origin: "http://localhost:3000"
+  origin: "https://blog-front-end-ten.vercel.app"
 }));
 
 // routes
