@@ -40,7 +40,8 @@ module.exports.createCommentCtrl = asyncHandler(async (req, res) => {
  */
 
 module.exports.getAllCommentsCtrl = asyncHandler(async (req, res) => {
-    const comments = await Comment.find().populate('user','-password');
+    const comments = await Comment.find().populate('user','-password')
+    .populate('postId');
     res.status(200).json(comments);
 }
 );
