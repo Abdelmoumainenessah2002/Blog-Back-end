@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
-const joi = require("joi");
+const Joi = require("joi");
+const passwordComplexity = require("joi-password-complexity");
 
 const UserSchema = new mongoose.Schema(
   {
@@ -44,7 +45,9 @@ const UserSchema = new mongoose.Schema(
     },
   },
   {
-    timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true }
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   }
 );
 
@@ -54,7 +57,6 @@ UserSchema.virtual("posts", {
   localField: "_id",
   foreignField: "user",
 });
-
 
 // Generate JWT token
 UserSchema.methods.generateAuthToken = function () {
@@ -68,39 +70,58 @@ UserSchema.methods.generateAuthToken = function () {
 // User Model
 const User = mongoose.model("User", UserSchema);
 
-
 // register user validation
 function validateRegisterUser(obj) {
-  const schema = joi.object({
-    username: joi.string().min(2).max(100).trim().required(),
-    email: joi.string().email().trim().required(),
-    password: joi.string().min(8).trim().required(),
+  const schema = Joi.object({
+    username: Joi.string().min(2).max(100).trim().required(),
+    email: Joi.string().email().trim().required(),
+    password: passwordComplexity().required(),
   });
 
   return schema.validate(obj);
-};
-
+}
 
 // login user validation
 function validateLoginUser(obj) {
-  const schema = joi.object({
-    email: joi.string().email().trim().required(),
-    password: joi.string().trim().required(),
+  const schema = Joi.object({
+    email: Joi.string().email().trim().required(),
+    password: Joi.string().min(8).trim().required(),
   });
-
   return schema.validate(obj);
-};
-
+}
 
 // validate user profile update
 function validateUserProfileUpdate(obj) {
-  const schema = joi.object({
-    username: joi.string().min(2).max(100).trim(),
-    password: joi.string().min(8).trim(),
-    Bio: joi.string().trim(),
+  const schema = Joi.object({
+    username: Joi.string().min(2).max(100).trim(),
+    password: passwordComplexity(),
+    bio: Joi.string().trim(),
   });
 
   return schema.validate(obj);
-};
+}
 
-module.exports = { User, validateRegisterUser, validateLoginUser, validateUserProfileUpdate };
+// validate email
+function validateEmail(obj) {
+  const schema = Joi.object({
+    email: Joi.string().email().trim().required(),
+  });
+  return schema.validate(obj);
+}
+
+// validate new password
+function validateNewPassword(obj) {
+  const schema = Joi.object({
+    password: passwordComplexity().required(),  
+  });
+  return schema.validate(obj);
+}
+
+module.exports = {
+  User,
+  validateRegisterUser,
+  validateLoginUser,
+  validateUserProfileUpdate,
+  validateEmail,
+  validateNewPassword,
+};

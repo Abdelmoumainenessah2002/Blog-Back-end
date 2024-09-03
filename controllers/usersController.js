@@ -21,7 +21,7 @@ const {Comment} = require('../models/Comment');
 
 module.exports.getAllUsersCtrl = asyncHandler(async (req, res) => {
   const users = await User.find().select("-password").populate("posts");
-  res.status(200).json(users);
+  res.status(200).json(users);re
 });
 
 /**
@@ -32,14 +32,20 @@ module.exports.getAllUsersCtrl = asyncHandler(async (req, res) => {
  */
 
 module.exports.getUserProfileCtrl = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.params.id).select("-password").populate("posts");
+  const user = await User.findById(req.params.id)
+    .select("-password")
+    .populate({
+      path: "posts",
+      options: { sort: { createdAt: -1 } }, // Sort posts by createdAt in descending order
+    });
 
   if (!user) {
-    res.status(404).json({ message: "User not found" });
+    return res.status(404).json({ message: "User not found" });
   }
 
   res.status(200).json(user);
 });
+
 
 /**
  * @desc    Update user Profile
@@ -73,12 +79,12 @@ module.exports.updateUserProfileCtrl = asyncHandler(async (req, res) => {
     {
       $set: {
         username: req.body.username,
-        password: user.password,
-        Bio: req.body.Bio,
+        password: req.body.password,
+        Bio: req.body.bio,
       },
     },
     { new: true }
-  ).select("-password");
+  ).select("-password").populate("posts");
 
   res.status(200).json(updatedUser);
 });
@@ -137,7 +143,7 @@ module.exports.profilePhotoUploadCtrl = asyncHandler(async (req, res) => {
     .status(200)
     .json({
       message: "Profile photo uploaded successfully",
-      newProfilePhoto: { url: result.secure_url, publicId: result.public_id },
+      profilePhoto: { url: result.secure_url, publicId: result.public_id },
     });
 
   // 8- Remove the photo from the server
@@ -175,7 +181,9 @@ module.exports.deleteUserProfileCtrl = asyncHandler(async (req, res) => {
 
 
   // 5- Delete the user profile photo from Cloudinary
-  await cloudinaryRemoveImage(user.profilePhoto.publicId);
+  if (user.profilePhoto.publicId !== null){
+    await cloudinaryRemoveImage(user.profilePhoto.publicId);
+  }
 
   // 6- Delete the user posts & comments from the database
   await Post.deleteMany({ user: user._id });

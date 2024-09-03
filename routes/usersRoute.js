@@ -20,8 +20,9 @@ router.route("/profile/:id").get(validateObjectID, getUserProfileCtrl)
                             .put(validateObjectID,verifyTokenAndOnlyUser, updateUserProfileCtrl)
                             .delete(validateObjectID,verifyTokenAndAuthorization, deleteUserProfileCtrl);
 // /api/users/profile/profile-photo-upload
-router.route("/profile/profile-photo-upload")
-      .post(verifyToken, photoUpload.single("image"), profilePhotoUploadCtrl); // Single is used to upload single file
+router
+  .route("/profile/profile-photo-upload")
+  .post(verifyToken, photoUpload.single("image"),profilePhotoUploadCtrl); // Single is used to upload single file
 
 
 // api/users/count
