@@ -1,6 +1,10 @@
 const asyncHandler = require("express-async-handler");
 const {User, validateRegisterUser, validateLoginUser} = require("../models/User");
 const bcrypt = require("bcryptjs");
+const VerificationToken = require("../models/VerificationToken");
+const crypto = require("crypto");
+const sendEmail = require("../utils/sendEmail");
+
 
 /**
  * @desc    Register a new user
@@ -34,13 +38,32 @@ module.exports.registerUserCtrl = asyncHandler(async (req, res) => {
     username: username,
     email: email,
     password: hashedPassword,
+    Bio: "",
   });
   await user.save();
 
-  // @TODO - Send email verification link if user is not verified
+  // create new verificationtoken & save to database
+  
+  const verificationToken = new VerificationToken({
+    userId: user._id,
+    token: crypto.randomBytes(32).toString("hex"),
+  });
+  await verificationToken.save();
+  // making the link unique
+  const link = `${process.env.CLIENT_DOMAIN}/users/${user._id}/verify/${verificationToken.token}`;
+  // putting the link in html template
+  const htmlTemplate = `
+  <div> 
+    <h1> Welcome to Blog </h1>
+    <p> Please click the link below to verify your account </p>
+    <a href="${link}"> Verify Account </a>
+  </div>
+  `
+  // sending the email to the user
+  await sendEmail(user.email, "Verify Your Email", htmlTemplate );
 
   // Return response to client
-  return res.status(201).json({ message: "User created successfully" });
+  return res.status(201).json({ message: "We have sent you an email to verify your account" });
 });
 
 /**
@@ -61,6 +84,8 @@ module.exports.loginUserCtrl = asyncHandler(async (req, res) => {
     return res.status(400).json({ message: error.details[0].message });
   }
 
+  
+
   // Check if user exists
   let user = await User.findOne({ email });
   if (!user) {
@@ -73,7 +98,38 @@ module.exports.loginUserCtrl = asyncHandler(async (req, res) => {
     return res.status(400).json({ message: "Invalid credentials" });
   }
 
-  // @TODO - Send email verification link if user is not verified
+  // Send email verification link if user is not verified
+  if (!user.isAccountVerified) {
+
+      let verificationToken = await VerificationToken.findOne({
+        userId: user._id,
+      });
+
+      if (!verificationToken) {
+        verificationToken = new VerificationToken({
+          userId: user._id,
+          token: crypto.randomBytes(32).toString("hex"),
+        });
+        await verificationToken.save();
+      }
+
+      const link = `${process.env.CLIENT_DOMAIN}/users/${user._id}/verify/${verificationToken.token}`;
+      
+      const htmlTemplate = `
+        <div> 
+          <h1> Welcome to Blog </h1>
+          <p> Please click the link below to verify your account </p>
+          <a href="${link}"> Verify Account </a>
+        </div>
+        `;
+      // sending the email to the user
+      await sendEmail(user.email, "Verify Your Email", htmlTemplate);
+
+      return res
+        .status(400)
+        .json({ message: "Your email is not verified, please verify your account" });
+
+  }
 
   // generate token jwt
   const token = user.generateAuthToken();
@@ -85,6 +141,47 @@ module.exports.loginUserCtrl = asyncHandler(async (req, res) => {
     email: user.email,
     isAdmin: user.isAdmin,
     profilePhoto: user.profilePhoto,
+    Bio: user.Bio || "",
     token,
   });
+});
+
+
+
+/**
+ * @desc    verify user email
+ * @route   /api/auth/:userId/verify/:token
+ * @method  GET
+ * @access  Public
+ */
+
+module.exports.verifyUserAccountCtrl = asyncHandler(async (req, res) => {
+  // Extract variables from req.params
+  const { userId, token } = req.params;
+
+  // Check if user exists
+  const user = await User.findById(userId);
+  if (!user) {
+    return res.status(400).json({ message: "Invalid verification link" });
+  }
+
+  // verify token
+  const verificationToken = await VerificationToken.findOne({
+    userId: user._id,
+    token: token,
+  });
+
+  if (!verificationToken) {
+    return res.status(400).json({ message: "Invalid verification link" });
+  }
+
+  // update user to verified
+  user.isAccountVerified = true;
+  await user.save();
+
+  // delete verification token
+  await VerificationToken.deleteOne({ userId: user._id });
+
+  // Return response to client
+  return res.status(200).json({ message: "Your account has been verified" });
 });
