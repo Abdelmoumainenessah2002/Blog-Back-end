@@ -92,17 +92,20 @@ module.exports.getAllPostsCtrl = asyncHandler(async (req, res) => {
 */
     
 module.exports.getSinglePostCtrl = asyncHandler(async (req, res) => {
-    const post = await Post.findById(req.params.id)
-      .populate("user", "-password")
-      .populate("comments");
-    
-    if (!post) {
-        return res.status(404).json({ message: "Post not found" });
-    }
-    
-    res.status(200).json(post);
-}   
-);
+  const post = await Post.findById(req.params.id)
+    .populate("user", "-password")
+    .populate({
+      path: "comments",
+      options: { sort: { createdAt: -1 } }, // Sort comments by createdAt in descending order
+    });
+
+  if (!post) {
+    return res.status(404).json({ message: "Post not found" });
+  }
+
+  res.status(200).json(post);
+});
+
 
 
 /**
@@ -136,7 +139,7 @@ module.exports.deletePostCtrl = asyncHandler(async (req, res) => {
     await Post.findByIdAndDelete(req.params.id);
     await cloudinaryRemoveImage(post.image.publicId);
 
-    // @TODO: remove all the comments related to this post
+    // remove all the comments related to this post
     await Comment.deleteMany({ postId: post._id });
 
     return res.status(200).json({ message: "Post deleted successfully",postId: post._id });
@@ -174,13 +177,16 @@ module.exports.updatePostCtrl = asyncHandler(async (req, res) => {
     }
 
     // 4- update the post
-    const updatedPost = await Post.findByIdAndUpdate(req.params.id, req.body, {
-      $set: {
+    const updatedPost = await Post.findByIdAndUpdate(
+      req.params.id,
+      {
         title: req.body.title,
         description: req.body.description,
         category: req.body.category,
       },
-    }, { new: true }).populate('user', '-password');
+      { new: true } // This option returns the modified document
+    ).populate("user", "-password").populate("comments");
+
 
     res.status(200).json(updatedPost);
 }
@@ -286,6 +292,6 @@ module.exports.toggleLikeCtrl = asyncHandler(async (req, res) => {
     );
   }
 
-  res.status(200).json(post);
+  res.status(200).json(post.likes);
 }
 );
